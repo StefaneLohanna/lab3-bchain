@@ -351,22 +351,58 @@ def palma(ctx: Contexto) -> float:
     """Razao de Palma: share do topo 10% / share dos 40% inferiores."""
     raise NotImplementedError("TODO: razao de Palma")  # TODO
 
+import os
 
-def gini_recompensas(ctx: Contexto) -> float:
+def _salvar_gini_por_rodada(ctx: Contexto,
+                           arquivo: str = "gini_stake_rodadas.csv") -> None:
     """
-    G10 – Gini das recompensas acumuladas.
-
-    Soma as recompensas recebidas por cada holder ao longo de todas as
-    rodadas e calcula o coeficiente de Gini dessa distribuição.
+    Salva o Gini da camada stake em cada rodada da simulação.
+    Acrescenta uma linha para cada rodada da execução atual.
     """
 
-    recompensas = np.zeros(len(ctx.stakes), dtype=float)
+    existe = os.path.exists(arquivo)
 
-    for rodada in ctx.historico:
-        holders = rodada["pool"][rodada["eleitos"]]
-        recompensas[holders] += rodada["blocos"]
+    with open(arquivo, "a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
 
-    return _gini(recompensas)
+        if not existe:
+            w.writerow([
+                "n_holders",
+                "parametro_dist",
+                "n_rodadas",
+                "reinveste_recompensa",
+                "rodada",
+                "gini"
+            ])
+
+        for i, rodada in enumerate(ctx.historico, start=1):
+            g = _gini(rodada["stakes"])
+
+            w.writerow([
+                ctx.cfg.n_holders,
+                ctx.cfg.parametro_dist,
+                ctx.cfg.n_rodadas,
+                ctx.cfg.reinveste_recompensa,
+                i,
+                g
+            ])
+
+def gini_stake_rodadas(ctx: Contexto) -> float:
+    """
+    G10 – Gini da camada stake ao longo das rodadas.
+    """
+
+    if ctx.camada != "stake":
+        return 0.0
+
+    if not ctx.historico:
+        return 0.0
+
+    _salvar_gini_por_rodada(ctx)
+
+    stakes_finais = ctx.historico[-1]["stakes"]
+
+    return _gini(stakes_finais)
 
 # A LLM pode ter esquecido de gerar algum
 
@@ -379,7 +415,7 @@ METRICAS: dict[str, Callable] = {
     "numero_efetivo": numero_efetivo,
     "entropia_shannon": entropia_shannon,
     "palma": palma,
-    "gini_recompensas": gini_recompensas,
+    "gini_recompensas": gini_stake_rodadas,
 }
 
 
@@ -517,7 +553,7 @@ grade = {
 
 cen = gerar_cenarios(
     grade,
-    metricas=["gini","numero_efetivo", "gini_recompensas"],
+    metricas=["gini_recompensas","numero_efetivo"],
     camadas_alvo=["stake", "eleito", "produzido"],
     grupo="G10",
     patologia="concentracao_de_recompensas",
