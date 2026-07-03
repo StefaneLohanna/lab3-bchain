@@ -152,4 +152,49 @@ plt.savefig(
 
 plt.close()
 
+
+# ============================================================
+# 4) NUMERO EFETIVO x HOLDERS
+# ============================================================
+
+plt.figure(figsize=(8,5))
+
+for camada in ["stake","eleito","produzido"]:
+
+    dados = (
+        res[
+            (res["metrica"]=="numero_efetivo") &
+            (res["camada"]==camada)
+        ]
+        .groupby("reinveste_recompensa")
+        .agg(
+            media=("media","mean"),
+            ic95=("ic95","mean")
+        )
+        .reset_index()
+    )
+
+    plt.errorbar(
+        dados["reinveste_recompensa"],
+        dados["media"],
+        yerr=dados["ic95"],
+        marker="o",
+        capsize=5,
+        label=camada
+    )
+
+plt.xlabel("Reinvestimento")
+plt.ylabel("Número efetivo")
+plt.title("Número efetivo por camada")
+plt.grid(True)
+plt.legend()
+
+plt.savefig(
+    "./graficos/numeroEfetivo/numeroEfetivo_camadas.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.close()
+
 print("Gráficos gerados com sucesso!")
