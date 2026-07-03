@@ -1,51 +1,155 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Ler resultados
-df = pd.read_csv("resultados.csv")
+RESULTADOS="./resultados.csv"
 
-# Filtrar número efetivo na camada stake
-ne = df[
-    (df["metrica"] == "numero_efetivo") &
-    (df["camada"] == "stake")
+PASTA="./graficos/numeroEfetivo"
+os.makedirs(PASTA, exist_ok=True)
+
+
+# ============================================================
+# LEITURA
+# ============================================================
+
+res=pd.read_csv(RESULTADOS)
+
+ne=res[
+    (res["metrica"]=="numero_efetivo") &
+    (res["camada"]=="stake")
 ]
 
-n_holders_vals = sorted(ne["n_holders"].unique())
+gini=res[
+    (res["metrica"]=="gini") &
+    (res["camada"]=="stake")
+]
 
-fig, axes = plt.subplots(1, len(n_holders_vals), figsize=(6*len(n_holders_vals), 5), sharey=True)
-if len(n_holders_vals) == 1:
-    axes = [axes]
 
-for ax, nh in zip(axes, n_holders_vals):
-    sub = ne[ne["n_holders"] == nh]
+# ============================================================
+# 1) NUMERO EFETIVO x REINVESTIMENTO
+# ============================================================
 
-    for rodada in sorted(sub["n_rodadas"].unique()):
-        subset = sub[sub["n_rodadas"] == rodada]
+plt.figure(figsize=(8,5))
 
-        # agrupa apenas por reinveste_recompensa (dentro de um n_holders fixo);
-        # ainda mistura parametro_dist, então mostramos a dispersão real entre
-        # esses cenários via desvio-padrão de "media", não a média dos ic95
-        agg = (
-            subset.groupby("reinveste_recompensa")["media"]
-            .agg(["mean", "std"])
-            .reset_index()
+for r in sorted(ne["n_rodadas"].unique()):
+
+    dados=(
+        ne[ne["n_rodadas"]==r]
+        .groupby("reinveste_recompensa")
+        .agg(
+            media=("media","mean"),
+            ic95=("ic95","mean")
         )
+        .reset_index()
+    )
 
-        ax.errorbar(
-            agg["reinveste_recompensa"],
-            agg["mean"],
-            yerr=agg["std"],
-            marker="o",
-            capsize=5,
-            label=f"Rodadas={rodada}"
+    plt.errorbar(
+        dados["reinveste_recompensa"],
+        dados["media"],
+        yerr=dados["ic95"],
+        marker="o",
+        capsize=5,
+        label=f"{r} rodadas"
+    )
+
+plt.xlabel("Reinvestimento")
+plt.ylabel("Número efetivo")
+plt.title("Número efetivo × Reinvestimento")
+plt.grid(True)
+plt.legend()
+
+plt.savefig(
+    f"{PASTA}/numeroEfetivo_reinvestimento.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.close()
+
+
+
+# ============================================================
+# 2) NUMERO EFETIVO x PARETO
+# ============================================================
+
+plt.figure(figsize=(8,5))
+
+for r in sorted(ne["n_rodadas"].unique()):
+
+    dados=(
+        ne[ne["n_rodadas"]==r]
+        .groupby("parametro_dist")
+        .agg(
+            media=("media","mean"),
+            ic95=("ic95","mean")
         )
+        .reset_index()
+    )
 
-    ax.set_title(f"n_holders={nh}")
-    ax.set_xlabel("Reinvestimento da recompensa")
-    ax.grid(alpha=0.3)
+    plt.errorbar(
+        dados["parametro_dist"],
+        dados["media"],
+        yerr=dados["ic95"],
+        marker="o",
+        capsize=5,
+        label=f"{r} rodadas"
+    )
 
-axes[0].set_ylabel("Número efetivo")
-axes[0].legend()
-fig.suptitle("Número efetivo vs Reinvestimento das recompensas (por n_holders)")
-plt.tight_layout()
-plt.show()
+plt.xlabel("Parâmetro Pareto")
+plt.ylabel("Número efetivo")
+plt.title("Número efetivo × Pareto")
+plt.grid(True)
+plt.legend()
+
+plt.savefig(
+    f"{PASTA}/numeroEfetivo_pareto.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.close()
+
+
+
+# ============================================================
+# 3) NUMERO EFETIVO x HOLDERS
+# ============================================================
+
+plt.figure(figsize=(8,5))
+
+for r in sorted(ne["n_rodadas"].unique()):
+
+    dados=(
+        ne[ne["n_rodadas"]==r]
+        .groupby("n_holders")
+        .agg(
+            media=("media","mean"),
+            ic95=("ic95","mean")
+        )
+        .reset_index()
+    )
+
+    plt.errorbar(
+        dados["n_holders"],
+        dados["media"],
+        yerr=dados["ic95"],
+        marker="o",
+        capsize=5,
+        label=f"{r} rodadas"
+    )
+
+plt.xlabel("Número de holders")
+plt.ylabel("Número efetivo")
+plt.title("Número efetivo × Holders")
+plt.grid(True)
+plt.legend()
+
+plt.savefig(
+    f"{PASTA}/numeroEfetivo_holders.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.close()
+
+print("Gráficos gerados com sucesso!")

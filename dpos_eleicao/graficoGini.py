@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 RESULTADOS = "./resultados.csv"
 RODADAS = "./gini_stake_rodadas.csv"
 
-PASTA = "graficos_gini"
+PASTA = "./graficos/gini"
 os.makedirs(PASTA, exist_ok=True)
 
 
