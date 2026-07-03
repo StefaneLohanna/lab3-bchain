@@ -312,9 +312,23 @@ def hhi(ctx: Contexto) -> float:
     raise NotImplementedError("TODO: HHI")  # TODO
 
 
-def coef_nakamoto(ctx: Contexto, limiar: float = 1/3) -> int:
-    """Nº minimo de entidades cujo share acumulado ultrapassa `limiar`."""
-    raise NotImplementedError("TODO: coeficiente de Nakamoto sobre ctx.shares")  # TODO
+def coef_nakamoto(ctx: Contexto, limiar: float = 1/3) -> float:
+    """
+    Coeficiente de Nakamoto (Srinivasan & Lee, 2017).
+
+    Menor numero de entidades cujo share acumulado (em ordem decrescente)
+    ultrapassa `limiar` (padrao: 1/3, pois acima disso um bloco pode travar
+    o consenso no DPoS; tambem usado com 1/2 para maioria absoluta).
+
+    Retorna float para compatibilidade com o motor Monte Carlo.
+    """
+    s = np.sort(np.asarray(ctx.shares, dtype=float))[::-1]  # decrescente
+    acumulado = 0.0
+    for m, si in enumerate(s, start=1):
+        acumulado += si
+        if acumulado > limiar:
+            return float(m)
+    return float(len(s))
 
 
 def numero_efetivo(ctx: Contexto) -> float:
