@@ -318,8 +318,28 @@ def coef_nakamoto(ctx: Contexto, limiar: float = 1/3) -> int:
 
 
 def numero_efetivo(ctx: Contexto) -> float:
-    """Nº efetivo (Laakso-Taagepera) = 1 / sum(ctx.shares**2)."""
-    raise NotImplementedError("TODO: 1/HHI")  # TODO
+    """
+    Número efetivo (Laakso-Taagepera)
+
+    Mede quantos participantes relevantes existem
+    efetivamente na distribuição.
+    """
+
+    shares = np.asarray(
+        ctx.shares,
+        dtype=float
+    )
+
+    soma_quadrados = np.sum(
+        shares ** 2
+    )
+
+    if soma_quadrados == 0:
+        return 0.0
+
+    return float(
+        1.0 / soma_quadrados
+    )
 
 
 def entropia_shannon(ctx: Contexto) -> float:
@@ -489,15 +509,15 @@ if __name__ == "__main__":
 # ----------------------------------------------------------------------
 
 grade = {
-    "parametro_dist": [1.1, 1.5, 2.0],
-    "tamanho_comite": [21, 27, 101],
-    "n_rodadas": [5, 10, 20],
-    "reinveste_recompensa": [0.0, 0.25, 0.5],
+    "n_holders":[200,500,1000],
+    "parametro_dist":[1.1,1.5,2.0],
+    "n_rodadas":[5,10,20],
+    "reinveste_recompensa":[0.0,0.25,0.5]
 }
 
 cen = gerar_cenarios(
     grade,
-    metricas=["gini","gini_recompensas"],
+    metricas=["gini","numero_efetivo", "gini_recompensas"],
     camadas_alvo=["stake", "eleito", "produzido"],
     grupo="G10",
     patologia="concentracao_de_recompensas",
