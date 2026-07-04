@@ -312,9 +312,23 @@ def hhi(ctx: Contexto) -> float:
     raise NotImplementedError("TODO: HHI")  # TODO
 
 
-def coef_nakamoto(ctx: Contexto, limiar: float = 1/3) -> int:
-    """Nº minimo de entidades cujo share acumulado ultrapassa `limiar`."""
-    raise NotImplementedError("TODO: coeficiente de Nakamoto sobre ctx.shares")  # TODO
+def coef_nakamoto(ctx: Contexto, limiar: float = 1/3) -> float:
+    """
+    Coeficiente de Nakamoto (Srinivasan & Lee, 2017).
+
+    Menor numero de entidades cujo share acumulado (em ordem decrescente)
+    ultrapassa `limiar` (padrao: 1/3, pois acima disso um bloco pode travar
+    o consenso no DPoS; tambem usado com 1/2 para maioria absoluta).
+
+    Retorna float para compatibilidade com o motor Monte Carlo.
+    """
+    s = np.sort(np.asarray(ctx.shares, dtype=float))[::-1]  # decrescente
+    acumulado = 0.0
+    for m, si in enumerate(s, start=1):
+        acumulado += si
+        if acumulado > limiar:
+            return float(m)
+    return float(len(s))
 
 
 def numero_efetivo(ctx: Contexto) -> float:
@@ -541,29 +555,29 @@ if __name__ == "__main__":
     # print(f"{len(cen)} cenarios -> cenarios_exemplo.csv ; {len(res)} resultados -> resultados_exemplo.csv")
     
     # ----------------------------------------------------------------------
-# G10 - Concentração de recompensas
-# ----------------------------------------------------------------------
+    # G10 - Concentração de recompensas
+    # ----------------------------------------------------------------------
 
-grade = {
-    "n_holders":[200,500,1000],
-    "parametro_dist":[1.1,1.5,2.0],
-    "n_rodadas":[5,10,20],
-    "reinveste_recompensa":[0.0,0.25,0.5]
-}
+    grade = {
+        "n_holders":[200,500,1000],
+        "parametro_dist":[1.1,1.5,2.0],
+        "n_rodadas":[5,10,20],
+        "reinveste_recompensa":[0.0,0.25,0.5]
+    }
 
-cen = gerar_cenarios(
-    grade,
-    metricas=["gini_recompensas","numero_efetivo"],
-    camadas_alvo=["stake", "eleito", "produzido"],
-    grupo="G10",
-    patologia="concentracao_de_recompensas",
-    n_runs=30,
-    seed_base=0
-)
+    cen = gerar_cenarios(
+        grade,
+        metricas=["gini_recompensas","numero_efetivo","coef_nakamoto"],
+        camadas_alvo=["stake", "eleito", "produzido"],
+        grupo="G10",
+        patologia="concentracao_de_recompensas",
+        n_runs=30,
+        seed_base=0
+    )
 
-salvar_cenarios(cen, "cenarios.csv")
+    salvar_cenarios(cen, "cenarios.csv")
 
-res = rodar_csv("cenarios.csv", "resultados.csv")
+    res = rodar_csv("cenarios.csv", "resultados.csv")
 
-print(f"{len(cen)} cenários gerados.")
-print(f"{len(res)} resultados gerados.")
+    print(f"{len(cen)} cenários gerados.")
+    print(f"{len(res)} resultados gerados.")
