@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-RESULTADOS = "./nakamoto_resultados.csv"
+RESULTADOS = "./resultados.csv"
 
 PASTA = "./graficos/nakamoto"
 os.makedirs(PASTA, exist_ok=True)

@@ -555,29 +555,29 @@ if __name__ == "__main__":
     # print(f"{len(cen)} cenarios -> cenarios_exemplo.csv ; {len(res)} resultados -> resultados_exemplo.csv")
     
     # ----------------------------------------------------------------------
-# G10 - Concentração de recompensas
-# ----------------------------------------------------------------------
+    # G10 - Concentração de recompensas
+    # ----------------------------------------------------------------------
 
-grade = {
-    "n_holders":[200,500,1000],
-    "parametro_dist":[1.1,1.5,2.0],
-    "n_rodadas":[5,10,20],
-    "reinveste_recompensa":[0.0,0.25,0.5]
-}
+    grade = {
+        "n_holders":[200,500,1000],
+        "parametro_dist":[1.1,1.5,2.0],
+        "n_rodadas":[5,10,20],
+        "reinveste_recompensa":[0.0,0.25,0.5]
+    }
 
-cen = gerar_cenarios(
-    grade,
-    metricas=["gini_recompensas","numero_efetivo"],
-    camadas_alvo=["stake", "eleito", "produzido"],
-    grupo="G10",
-    patologia="concentracao_de_recompensas",
-    n_runs=30,
-    seed_base=0
-)
+    cen = gerar_cenarios(
+        grade,
+        metricas=["gini_recompensas","numero_efetivo","coef_nakamoto"],
+        camadas_alvo=["stake", "eleito", "produzido"],
+        grupo="G10",
+        patologia="concentracao_de_recompensas",
+        n_runs=30,
+        seed_base=0
+    )
 
-salvar_cenarios(cen, "cenarios.csv")
+    salvar_cenarios(cen, "cenarios.csv")
 
-res = rodar_csv("cenarios.csv", "resultados.csv")
+    res = rodar_csv("cenarios.csv", "resultados.csv")
 
-print(f"{len(cen)} cenários gerados.")
-print(f"{len(res)} resultados gerados.")
+    print(f"{len(cen)} cenários gerados.")
+    print(f"{len(res)} resultados gerados.")
